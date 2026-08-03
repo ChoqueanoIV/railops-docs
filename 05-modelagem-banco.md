@@ -98,20 +98,27 @@ Origem: RF14, RF15, RN05.
 
 ### `passagem_tecon_detalhe`
 
-Origem: RF12, RF13, RN05.
+Origem: RF12, RF13, RN05, RN10.
 
 | Coluna | Tipo | Restrições |
 |---|---|---|
 | id | uuid | PK |
 | passagem_id | uuid | FK → `passagem_servico.id`, UNIQUE, NOT NULL |
-| carga_mal_posicionada | boolean | NOT NULL |
+| houve_atendimento | boolean | NOT NULL — resposta à pergunta de RN10 |
+| carga_mal_posicionada | boolean | NULL — obrigatório apenas se `houve_atendimento = true` |
 | carga_mal_posicionada_descricao | text | NULL |
-| area1_atendida | boolean | NOT NULL |
+| area1_atendida | boolean | NULL — obrigatório apenas se `houve_atendimento = true` |
 | area1_inicio | time | NULL |
 | area1_termino | time | NULL |
-| area2_atendida | boolean | NOT NULL |
+| area2_atendida | boolean | NULL — obrigatório apenas se `houve_atendimento = true` |
 | area2_inicio | time | NULL |
 | area2_termino | time | NULL |
+
+**Observação (RN10):** quando `houve_atendimento = false`, o registro
+ainda é criado nesta tabela (para não perder o rastro de que a pergunta
+foi respondida), mas os demais campos ficam `NULL` — a validação de
+obrigatoriedade condicional é responsabilidade da camada de Service
+(ADR-003), não do schema.
 
 ---
 

@@ -169,6 +169,42 @@ capacidade inconsistente e potencialmente geradora de alertas falsos.
 
 ---
 
+## RN10 — Atendimento condicional no Terminal TECON
+
+No preenchimento de uma passagem do Terminal TECON, o sistema deve
+perguntar se houve atendimento ao terminal naquele turno.
+
+- Se **sim**, o preenchimento inclui vistoria de carga mal posicionada e
+  atendimento em Área 1 (Píer) e Área 2 (Galpão). **As duas áreas são
+  independentes entre si** — é comum que ambas sejam atendidas no mesmo
+  turno, mas não é regra: pode haver atendimento apenas na Área 1, apenas
+  na Área 2, ou em ambas. O sistema deve perguntar a atendida de cada
+  área separadamente, cada uma com seu próprio horário de início/término.
+- Se **não**, os campos específicos do TECON (vistoria de carga, horários
+  de Área 1/Área 2) não são exigidos nem exibidos.
+
+Em ambos os cenários (houve ou não atendimento), a ocupação das linhas
+(RN07), Observações e Relatório de Ocorrências **permanecem sempre
+obrigatórios** — a atualização do estado das linhas para a equipe
+seguinte independe de ter havido atendimento a clientes no turno. Nesse
+cenário sem atendimento, é comum (mas não obrigatório) que o responsável
+registre apenas "sem alterações" nesses campos.
+
+Esta exceção é exclusiva do Terminal TECON. O Pátio Brisamar, por ser
+terminal base, não possui equivalente — recebe sempre o preenchimento
+completo.
+
+**Justificativa:** o TECON, diferente do Brisamar, nem sempre tem
+movimentação de cliente em um dado turno, e mesmo quando tem, as duas
+áreas de atendimento (Píer e Galpão) operam de forma independente.
+Ainda assim, a atualização do estado das linhas é necessária para a
+equipe seguinte, independentemente de ter havido atendimento.
+
+**Casos de uso relacionados:** UC02
+**Requisitos relacionados:** RF12, RF13
+
+---
+
 ## Matriz de Rastreabilidade (Regras de Negócio → Casos de Uso → Requisitos)
 
 | Regra | Casos de Uso | Requisitos |
@@ -182,6 +218,7 @@ capacidade inconsistente e potencialmente geradora de alertas falsos.
 | RN07 | UC02 | RF06, RF07 |
 | RN08 | UC02, UC07 | RF15, RF16, RF23 |
 | RN09 | UC02 | Fora de escopo |
+| RN10 | UC02 | RF12, RF13 |
 
 ---
 
