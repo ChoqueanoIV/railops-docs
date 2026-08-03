@@ -117,10 +117,21 @@ como no protótipo.
 
 ---
 
+## Tela 8 — Confirmação de envio e encadeamento entre terminais
+
+**Casos de uso:** conclusão do UC02
+
+Exibida imediatamente após o envio bem-sucedido de qualquer passagem.
+Apresenta a ação **"Preencher passagem do [outro terminal] agora"** como
+botão primário — não como opção secundária — reconhecendo que ambos os
+terminais costumam ser atendidos pela mesma equipe no mesmo turno. A
+ação **"Concluir e voltar ao início"** permanece disponível como
+alternativa, para os casos em que não há necessidade de encadeamento.
+
+---
+
 ## Pendências identificadas nesta fase
 
-- Prototipar a tela de confirmação de envio, incluindo a ação de
-  encadeamento para o segundo terminal (ver Tela 2).
 - Validar com o Product Owner se a resposta "Não" em RN10 deve, por
   padrão, pré-preencher Observações/Ocorrências com "Sem alterações" ou
   deixar em branco para digitação manual.
@@ -131,6 +142,6 @@ como no protótipo.
 
 | Papel | Responsável | Status |
 |---|---|---|
-| Product Owner | (você) | Aprovado nesta sessão (Telas 1, 3, 4, 5, 6, 7); Tela 2 com pendência registrada |
+| Product Owner | (você) | Aprovado — todas as 8 telas |
 | Arquiteto de Software | (parceiro) | Pendente de revisão |
 | Desenvolvedor Sênior | Claude | Documento elaborado |
