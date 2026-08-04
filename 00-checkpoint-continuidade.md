@@ -6,7 +6,7 @@
 > a cada fase concluída.
 
 **Última atualização:** 04/08/2026
-**Fase atual:** Fase 9 — Implementação (em andamento — Épico 0, Fundação do Projeto)
+**Fase atual:** Fase 9 — Implementação (em andamento — Épico 0 concluído, Épico 1 iniciando)
 
 ---
 
@@ -37,6 +37,14 @@ a IA a adotar literalmente o papel abaixo.
 > problema em uma proposta do Product Owner (isso já aconteceu neste
 > projeto — ver ADR-002 — e foi bem recebido).
 >
+> O Product Owner é **nível iniciante na prática**, apesar do projeto bem
+> estruturado — aprendeu a teoria o suficiente para ser aprovado nos
+> cursos, mas tem pouca experiência de mão na massa. Aprende melhor
+> **fazendo**, no próprio projeto. Por isso, cada etapa prática deve ser
+> ensinada **passo a passo, um comando por vez, aguardando confirmação do
+> resultado antes de seguir para o próximo** — nunca entregar uma
+> sequência longa de comandos de uma vez.
+>
 > O projeto deve usar apenas recursos gratuitos sempre que possível.
 > Nenhuma etapa da metodologia abaixo deve ser pulada.
 >
@@ -60,7 +68,7 @@ a IA a adotar literalmente o papel abaixo.
 | 6 | Protótipos | ✅ Concluída (8 telas) |
 | 7 | Planejamento de branches | ✅ Concluída |
 | 8 | Backlog | ✅ Concluída |
-| 9 | Implementação | 🔄 Em andamento (Épico 0 — ver seção 12) |
+| 9 | Implementação | 🔄 Em andamento (Épico 0 concluído — ver seção 12; Épico 1 iniciando — ver seção 14) |
 | 10 | Testes | ⬜ Não iniciada |
 | 11 | Deploy | ⬜ Não iniciada |
 | 12 | Documentação final | ⬜ Não iniciada |
@@ -74,18 +82,33 @@ a IA a adotar literalmente o papel abaixo.
   preferência foi confirmada explicitamente pelo Product Owner.
 - Para instruções de terminal/Git, explique **um comando por vez**, o que
   cada comando faz e por que, e aguarde a confirmação do resultado (print
-  ou texto) antes de prosseguir para o próximo passo.
+  ou texto) antes de prosseguir para o próximo passo. Isso é uma regra
+  reforçada explicitamente: o Product Owner é iniciante na prática e quer
+  aprender fazendo, não apenas copiando blocos grandes de comando.
 - Sempre que o Git ou o terminal apresentar mensagens de erro ou avisos, a
   IA deve ler e explicar a causa raiz antes de propor a correção — não
   apenas fornecer o comando de correção.
 - O Product Owner já praticou com fluência: `git status`, `git add`,
-  `git commit`, `git push`, `git clone`, `git log --oneline`, e entende
-  working directory, staging area, "ahead of origin" e como ler hashes de
-  commit.
+  `git commit`, `git push`, `git pull`, `git checkout`, `git branch -d`,
+  `git clone`, `git log --oneline`, e entende working directory, staging
+  area, "ahead/behind of origin", fast-forward e como ler hashes de
+  commit. Já abriu e mesclou Pull Requests pelo GitHub.
+- O Product Owner trabalha **inteiramente pelo terminal (PowerShell)**,
+  não usa VS Code (nem outro editor) para criar/editar arquivos — prefere
+  comandos como `Out-File`, here-strings (`@'...'@`), `Get-ChildItem`,
+  `Get-Location`. A IA deve adaptar todas as instruções de criação/edição
+  de arquivo para esse fluxo, sem sugerir abrir um editor gráfico, a
+  menos que o Product Owner peça.
 - Antes de confiar que um arquivo foi colado/commitado, prefira pedir
   `git status` (ou `git log --oneline -5`) para confirmar com certeza, em
   vez de presumir — já houve um caso de confusão de caminho de pasta
   (OneDrive redirecionando `Documents`) que só foi esclarecido assim.
+- Scripts de teste/debug temporários (ex.: teste manual de conexão com
+  banco) devem ser tratados como descartáveis: usados uma vez para
+  validar, depois removidos do repositório antes de qualquer commit —
+  nunca versionados como "sujeira". Funcionalidades reais equivalentes
+  (ex.: um health check de verdade) devem ser implementadas como parte
+  da aplicação (ex.: rota FastAPI), não como script solto.
 - Ao gerar diagramas (ex.: DER), usar a ferramenta de visualização interna
   (mermaid) em vez de descrever apenas em texto.
 
@@ -129,7 +152,19 @@ railops-docs/                          (público, já criado e publicado)
     └── TECON_LAYOUT.pdf
 
 railops-app/                           (público, já criado e publicado)
-└── README.md                          (aponta para railops-docs)
+├── README.md                          (aponta para railops-docs)
+└── backend/
+    ├── app/
+    │   ├── __init__.py
+    │   ├── core/
+    │   │   ├── __init__.py
+    │   │   └── database.py            (engine, SessionLocal, Base, get_db())
+    │   ├── models/__init__.py         (vazio, aguardando Épico 1)
+    │   ├── repositories/__init__.py   (vazio, aguardando Épico 1)
+    │   ├── routers/__init__.py        (vazio, aguardando Épico 1)
+    │   └── services/__init__.py       (vazio, aguardando Épico 1)
+    ├── .env                           (DATABASE_URL, ignorado pelo Git)
+    └── requirements.txt
 ```
 
 **Observação sobre numeração:** não existe `04-*.md` na raiz — a Fase 4
@@ -155,30 +190,13 @@ física, redirecionada pelo OneDrive):
 | **Linhas do Brisamar** | Conjunto fixo: 16, 18, 20, 22, 24, 26, 28, 30 (RN07). |
 | **Linhas do TECON** | Conjunto fixo: Viaduto (DM1A), L1, L2, Travessão, DM4, DM6, DM1, DM3, Funil (DM2) (RN07). |
 
-## 5. Todas as Regras de Negócio já fechadas (ver `03-regras-de-negocio.md`)
+## 5. Todas as Regras de Negócio já fechadas
 
-- **RN01** — Edição de passagem restrita ao autor, apenas durante o
-  próprio turno.
-- **RN02** — Toda edição gera nova versão; nunca sobrescreve (ver ADR-001).
-- **RN03** — Nenhum registro é excluído permanentemente.
-- **RN04** — Um único responsável autenticado por passagem; demais membros
-  da equipe são texto livre.
-- **RN05** — Campos específicos por terminal (Brisamar vs. TECON).
-- **RN06** — Sup/Inf restrito às linhas 22 e 24 do Brisamar.
-- **RN07** — Linhas são listas fixas por terminal; veículos permanecem
-  texto livre.
-- **RN08** — Rádios são rastreados individualmente (catálogo com
-  histórico de falhas); EOTs não.
-- **RN09** — Sem validação/alerta de capacidade por linha (capacidade
-  varia por tipo de vagão — regra descartada deliberadamente).
-- **RN10** — No TECON, o sistema pergunta se houve atendimento no turno.
-  Se não, apenas linhas/Observações/Ocorrências são exigidos (sempre
-  obrigatórios, com ou sem atendimento). Se sim, Área 1 (Píer) e Área 2
-  (Galpão) são registradas de forma **independente** (cada uma com seu
-  próprio "atendida" e horários) — atender uma não implica a outra. O
-  Brisamar não tem essa exceção.
+Ver `03-regras-de-negocio.md` no repositório `railops-docs` para a lista
+completa (RN01 a RN10+). Não repetir o levantamento — já fechado desde a
+Fase 3.
 
-## 6. ADRs já registrados
+## 6. Decisões de arquitetura (ADRs)
 
 - **ADR-001** — Versionamento de histórico via **tabela de histórico
   separada** (Audit Table), com snapshot em `jsonb` (exceção consciente à
@@ -232,8 +250,8 @@ Organizado em **fatiamento vertical**, 9 Épicos, cada um entregando uma
 funcionalidade completa de ponta a ponta antes do próximo:
 
 0. Fundação do Projeto (estrutura de pastas, conexão DB, Alembic, seed,
-   health check, proteção de branch)
-1. Autenticação (UC01)
+   health check, proteção de branch) — **✅ CONCLUÍDO** (ver seção 12)
+1. Autenticação (UC01) — **🔄 INICIANDO** (ver seção 14)
 2. Preenchimento — Núcleo + Brisamar (UC02)
 3. Preenchimento — TECON (UC02, RN10)
 4. Edição e Histórico (UC04)
@@ -242,24 +260,36 @@ funcionalidade completa de ponta a ponta antes do próximo:
 7. Diagrama de Manobras (UC06)
 8. Relatório de Falhas por Rádio (UC07)
 
-## 10. Próximo passo no momento deste checkpoint
+## 10. Ambiente já instalado
 
-Iniciar a **Fase 9 — Implementação**, começando pelo **Épico 0 —
-Fundação do Projeto**. Ferramentas a instalar na máquina do Product Owner
-neste momento: Python 3.11+, VS Code (com extensão Python), Git (já
-instalado). Não é necessário instalar PostgreSQL localmente — o banco é
-Supabase (nuvem). Ensinar instalação de cada ferramenta no momento exato
-em que for necessária, não todas de uma vez.
+Python 3.13 (comando `python`), VS Code instalado mas **não usado** (PO
+trabalha via terminal), Git. Ambiente virtual em `railops-app/backend/venv`
+(nota: verificar se venv está em `backend/venv` ou `railops-app/venv` —
+ver seção 12, checar antes de assumir). PostgreSQL não instalado
+localmente — banco é 100% Supabase (nuvem).
 
-## 12. Progresso da Implementação (Fase 9 — Épico 0)
+## 11. Pendências conhecidas (não esquecer, mas não é bloqueante agora)
+
+- **Health check real**: o Épico 0 previa um health check como item da
+  Fundação do Projeto. Ele **ainda não foi implementado como rota**
+  (só existiu um script de teste manual de conexão, já removido de
+  propósito — ver seção 12). Quando for a hora de implementar, deve ser
+  uma rota FastAPI (ex.: `GET /health`), não um script solto.
+- Alembic (migrations) mencionado no backlog do Épico 0, mas a
+  configuração/primeira migration ainda não foi feita nesta sessão —
+  confirmar com o Product Owner se isso já existe ou se entra junto com
+  o primeiro model do Épico 1.
+
+---
+
+## 12. Progresso da Implementação — Épico 0 (CONCLUÍDO)
 
 ### Ambiente de desenvolvimento configurado
 - Python 3.13 confirmado como comando padrão (`python`, não `py` —
   máquina tem as duas versões instaladas; `python` foi escolhido por
   consistência).
-- Ambiente virtual criado em `railops-app/venv`, ativado via
-  `.\venv\Scripts\Activate.ps1` (funciona sem bloqueio de política de
-  execução nesta máquina).
+- Ambiente virtual criado, ativado via `.\venv\Scripts\Activate.ps1`
+  (funciona sem bloqueio de política de execução nesta máquina).
 - Bibliotecas instaladas: `fastapi`, `uvicorn`, `sqlalchemy`, `alembic`,
   `psycopg2-binary`, `python-dotenv`. Registradas em
   `backend/requirements.txt` via `pip freeze`.
@@ -285,14 +315,31 @@ o GitHub Flow (ADR-006). Cada pasta contém um `__init__.py` vazio.
   `postgres.<referência-do-projeto>`.
 - String de conexão salva em `backend/.env` (variável `DATABASE_URL`),
   arquivo corretamente ignorado pelo `.gitignore` — nunca versionado.
+- **Atenção de segurança:** a senha original do banco foi exibida em um
+  print compartilhado durante o desenvolvimento; recomendou-se resetar
+  a senha do banco no painel do Supabase (botão "Reset database
+  password") como precaução. Confirmar com o Product Owner se isso já
+  foi feito antes de prosseguir com qualquer coisa sensível.
 
-### Branch em andamento
-`chore/configura-conexao-banco` — ainda não mesclada. Trabalho realizado
-até este checkpoint: `.env` configurado; `backend/app/core/database.py`
-criado (engine SQLAlchemy, `SessionLocal`, `Base` declarativa, função
-`get_db()` como dependência FastAPI — ainda não testado com conexão
-real). **Próximo passo imediato: testar a conexão com o banco antes de
-prosseguir para os models.**
+### Conexão com o banco — CONFIGURADA E VALIDADA
+`backend/app/core/database.py` criado com `engine` (SQLAlchemy,
+gerencia a conexão de baixo nível), `SessionLocal` (fábrica de sessões
+por requisição), `Base` (classe base declarativa para os futuros
+models) e `get_db()` (dependência do FastAPI para injetar sessões nas
+rotas).
+
+Conexão testada manualmente com sucesso (script descartável
+`testar_conexao.py`, executando `SELECT 1` via `engine.connect()`,
+usando `text()` do SQLAlchemy para SQL literal). Funcionou de primeira.
+Script removido do repositório após a validação, por não fazer parte da
+aplicação em si (não deve virar artefato permanente — ver pendência do
+health check na seção 11).
+
+### Branch mesclada — PR #2
+`chore/configura-conexao-banco` → aberta, sem conflitos, mesclada na
+`main` via Pull Request #2 no GitHub, branch remota e local deletadas
+após o merge. `git pull` na `main` local trouxe as mudanças com
+fast-forward simples.
 
 ### Lições de ambiente registradas (para evitar repetir os mesmos problemas)
 1. **OneDrive sincronizando a pasta do projeto pode travar comandos Git**
@@ -301,6 +348,14 @@ prosseguir para os models.**
    Should I try again? (y/n)"` repetidamente. Solução: pausar a
    sincronização do OneDrive (ícone da bandeja do sistema) antes de
    operações Git que mexem em muitos arquivos, reativar depois.
+   **Atualização:** esse sintoma específico já ocorreu uma vez mesmo
+   com o OneDrive pausado — nesse caso, a causa não foi o OneDrive, e a
+   solução foi simplesmente responder `n` (não tentar de novo) a cada
+   prompt de exclusão até o Git terminar a operação sozinho; o
+   `checkout` completou corretamente mesmo recusando as exclusões, sem
+   perda de arquivos reais. Se acontecer de novo, responder `n` em
+   sequência até o prompt limpar é uma solução válida e seguem, não é
+   preciso decidir a causa raiz na hora.
 2. **Um `git checkout` interrompido no meio (por causa do problema acima)
    pode deixar a branch local desatualizada em relação ao GitHub**, mesmo
    que um `git pull` pareça ter sido executado depois. Se algo parecer
@@ -308,25 +363,43 @@ prosseguir para os models.**
    `git fetch origin` seguido de `git log --oneline origin/main` para
    comparar a verdade do servidor com o estado local, em vez de
    presumir. Se a branch local estiver atrasada e sem conflitos reais,
-   `git merge origin/main` resolve com um fast-forward simples.
+   `git merge origin/main` (ou `git pull`) resolve com um fast-forward
+   simples.
 3. **O Bloco de Notas do Windows pode adicionar `.txt` ao final de
    arquivos sem extensão reconhecida** (como `.env`), sem aviso claro.
    Isso já causou a perda aparente (mas não real) de uma configuração de
-   `.env`. Solução adotada: sempre criar/abrir esses arquivos via
-   terminal (`notepad backend\.env`), nunca via "Novo arquivo" do
-   Explorador do Windows.
+   `.env`. Solução adotada: sempre criar/editar arquivos via terminal
+   (PowerShell), nunca via "Novo arquivo" do Explorador do Windows nem
+   Bloco de Notas. Para criar arquivos com conteúdo multilinha direto
+   pelo PowerShell, usar here-strings: `@'...conteúdo...'@ | Out-File
+   -FilePath nome.py -Encoding utf8`.
 4. Ao investigar arquivos "sumidos", usar `Get-ChildItem <pasta> -Force
    -File` em vez de `dir`, pois é mais confiável para mostrar arquivos
    ocultos/com extensão inesperada no Windows.
+5. **Nunca digitar um novo comando enquanto o terminal ainda espera
+   resposta a um prompt interativo anterior** (ex.: o `(y/n)` do Git
+   durante um checkout travado) — o texto digitado é interpretado como
+   resposta ao prompt pendente, não como um novo comando, e pode
+   encadear outras perguntas inesperadas. Sempre resolver o prompt
+   pendente primeiro (responder y ou n), só então digitar o próximo
+   comando.
 
 ---
 
 ## 13. Convenções já estabelecidas para o projeto
 
 - Commits seguem **Conventional Commits** (`docs:`, `feat:`, `fix:`,
-  `refactor:`, `test:`, `chore:`).
+  `refactor:`, `test:`, `chore:`). Já usado na prática: `docs:` para
+  atualização de documentação, `feat:` para entrega de funcionalidade
+  (ex.: a configuração de conexão com banco foi classificada como
+  `feat`, não `chore`, por entregar comportamento novo ao sistema,
+  mesmo a branch tendo nome `chore/...`).
 - Branches seguem **GitHub Flow** (ADR-006): `<tipo>/<descricao-curta>`,
-  nascem de `main`, integradas via Pull Request revisado antes do merge.
+  nascem de `main`, integradas via Pull Request revisado antes do merge,
+  deletadas (local e remota) logo após o merge.
+- Descrição de PR segue estrutura: **O que foi feito** / **Decisões
+  técnicas** / **Validação** / **Próximos passos** — já usada com bons
+  resultados no PR #2.
 - Documentos de fase ficam na raiz do `railops-docs`, numerados
   (`01-`, `02-`, `03-`...).
 - ADRs ficam em `railops-docs/adrs/`, numerados independentemente
@@ -338,3 +411,37 @@ prosseguir para os models.**
 - Ao alterar um documento já existente (não criar um novo), a IA edita o
   arquivo local e reentrega a versão completa atualizada — o Product
   Owner sobrescreve o arquivo já existente na pasta local antes do commit.
+- Scripts de validação/debug pontuais nunca são commitados — são criados,
+  usados uma vez, e apagados antes do próximo `git add`.
+
+---
+
+## 14. Próximo passo no momento deste checkpoint — Épico 1 (Autenticação)
+
+Ainda **não iniciado** na prática. Segue o fatiamento vertical: modelo de
+dados (tabela `usuario`) → repository → service → rota → teste → tela,
+antes de avançar ao Épico 2.
+
+**Primeira decisão pendente a ser conduzida com o Product Owner:**
+apresentar (em texto corrido, com trade-offs, sem tabela) o que é um
+"model" do SQLAlchemy, por que ele vem antes do repository nessa ordem
+de fatiamento, e então caminhar para a criação do primeiro model —
+`usuario` — como arquivo `backend/app/models/usuario.py`, herdando de
+`Base` (definido em `core/database.py`).
+
+Pontos de negócio já fechados que o model de `usuario` precisa respeitar
+(não perguntar de novo, já decidido — ver ADR-002 e seção 5/7):
+- Matrículas são pré-cadastradas (não há cadastro público de usuário).
+- No primeiro acesso, o operador define seu próprio PIN.
+- PIN deve ser armazenado com hash (`passlib`), nunca em texto puro.
+- Autenticação própria via JWT, não Supabase Auth.
+
+A IA deve perguntar ao Product Owner se ele já sabe/lembra os campos
+exatos da tabela `usuario` conforme `05-modelagem-banco.md`, ou se deve
+consultar esse documento antes de propor o model — evitar assumir
+estrutura de campos sem confirmar contra a modelagem já fechada.
+
+Alembic (migrations) ainda não foi configurado nesta sessão — deve ser
+tratado como parte do primeiro trabalho prático do Épico 1, junto com o
+model, pois é o mecanismo que vai efetivamente criar a tabela `usuario`
+no banco Supabase a partir do model Python.
