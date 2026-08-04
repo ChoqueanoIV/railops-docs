@@ -5,8 +5,8 @@
 > perda de contexto, decisões ou metodologia. Deve ser mantido atualizado
 > a cada fase concluída.
 
-**Última atualização:** 03/08/2026
-**Fase atual:** Fase 9 — Implementação (não iniciada — planejamento 100% concluído)
+**Última atualização:** 04/08/2026
+**Fase atual:** Fase 9 — Implementação (em andamento — Épico 0, Fundação do Projeto)
 
 ---
 
@@ -60,7 +60,7 @@ a IA a adotar literalmente o papel abaixo.
 | 6 | Protótipos | ✅ Concluída (8 telas) |
 | 7 | Planejamento de branches | ✅ Concluída |
 | 8 | Backlog | ✅ Concluída |
-| 9 | Implementação | 🔄 Próxima a iniciar (Épico 0 — Fundação) |
+| 9 | Implementação | 🔄 Em andamento (Épico 0 — ver seção 12) |
 | 10 | Testes | ⬜ Não iniciada |
 | 11 | Deploy | ⬜ Não iniciada |
 | 12 | Documentação final | ⬜ Não iniciada |
@@ -251,7 +251,77 @@ instalado). Não é necessário instalar PostgreSQL localmente — o banco é
 Supabase (nuvem). Ensinar instalação de cada ferramenta no momento exato
 em que for necessária, não todas de uma vez.
 
-## 11. Convenções já estabelecidas para o projeto
+## 12. Progresso da Implementação (Fase 9 — Épico 0)
+
+### Ambiente de desenvolvimento configurado
+- Python 3.13 confirmado como comando padrão (`python`, não `py` —
+  máquina tem as duas versões instaladas; `python` foi escolhido por
+  consistência).
+- Ambiente virtual criado em `railops-app/venv`, ativado via
+  `.\venv\Scripts\Activate.ps1` (funciona sem bloqueio de política de
+  execução nesta máquina).
+- Bibliotecas instaladas: `fastapi`, `uvicorn`, `sqlalchemy`, `alembic`,
+  `psycopg2-binary`, `python-dotenv`. Registradas em
+  `backend/requirements.txt` via `pip freeze`.
+
+### Estrutura de pastas do backend — CONCLUÍDO (via PR #1, mesclado)
+Estrutura `backend/app/{routers,services,repositories,models,core}`
+criada e mesclada na `main` do `railops-app` através do primeiro Pull
+Request do projeto (branch `chore/estrutura-inicial-backend`), seguindo
+o GitHub Flow (ADR-006). Cada pasta contém um `__init__.py` vazio.
+
+### Banco de dados Supabase — CRIADO
+- Projeto criado do zero: nome `railops`, região **South America (São
+  Paulo)**, plano Free.
+- **Data API desabilitada deliberadamente** (Enable Data API,
+  Automatically expose new tables, Enable automatic RLS — todos
+  desmarcados na criação), pois o projeto não usa bibliotecas cliente
+  Supabase (supabase-js): todo acesso ao banco passa exclusivamente pelo
+  SQLAlchemy dentro do FastAPI.
+- **Método de conexão: Session Pooler** (não "Direct Connection") — a
+  conexão direta exige IPv6, que a rede do Product Owner não suporta;
+  o Session Pooler faz proxy IPv4 gratuito. Host:
+  `aws-0-sa-east-1.pooler.supabase.com`, porta `5432`, usuário no formato
+  `postgres.<referência-do-projeto>`.
+- String de conexão salva em `backend/.env` (variável `DATABASE_URL`),
+  arquivo corretamente ignorado pelo `.gitignore` — nunca versionado.
+
+### Branch em andamento
+`chore/configura-conexao-banco` — ainda não mesclada. Trabalho realizado
+até este checkpoint: `.env` configurado; `backend/app/core/database.py`
+criado (engine SQLAlchemy, `SessionLocal`, `Base` declarativa, função
+`get_db()` como dependência FastAPI — ainda não testado com conexão
+real). **Próximo passo imediato: testar a conexão com o banco antes de
+prosseguir para os models.**
+
+### Lições de ambiente registradas (para evitar repetir os mesmos problemas)
+1. **OneDrive sincronizando a pasta do projeto pode travar comandos Git**
+   que criam/apagam muitos arquivos ao mesmo tempo (ex.: `git checkout`
+   trocando de branch). Sintoma: `"Deletion of directory '...' failed.
+   Should I try again? (y/n)"` repetidamente. Solução: pausar a
+   sincronização do OneDrive (ícone da bandeja do sistema) antes de
+   operações Git que mexem em muitos arquivos, reativar depois.
+2. **Um `git checkout` interrompido no meio (por causa do problema acima)
+   pode deixar a branch local desatualizada em relação ao GitHub**, mesmo
+   que um `git pull` pareça ter sido executado depois. Se algo parecer
+   "faltando" depois de uma troca de branch turbulenta, rodar
+   `git fetch origin` seguido de `git log --oneline origin/main` para
+   comparar a verdade do servidor com o estado local, em vez de
+   presumir. Se a branch local estiver atrasada e sem conflitos reais,
+   `git merge origin/main` resolve com um fast-forward simples.
+3. **O Bloco de Notas do Windows pode adicionar `.txt` ao final de
+   arquivos sem extensão reconhecida** (como `.env`), sem aviso claro.
+   Isso já causou a perda aparente (mas não real) de uma configuração de
+   `.env`. Solução adotada: sempre criar/abrir esses arquivos via
+   terminal (`notepad backend\.env`), nunca via "Novo arquivo" do
+   Explorador do Windows.
+4. Ao investigar arquivos "sumidos", usar `Get-ChildItem <pasta> -Force
+   -File` em vez de `dir`, pois é mais confiável para mostrar arquivos
+   ocultos/com extensão inesperada no Windows.
+
+---
+
+## 13. Convenções já estabelecidas para o projeto
 
 - Commits seguem **Conventional Commits** (`docs:`, `feat:`, `fix:`,
   `refactor:`, `test:`, `chore:`).
