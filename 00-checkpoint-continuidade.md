@@ -5,8 +5,8 @@
 > perda de contexto, decisões ou metodologia. Deve ser mantido atualizado
 > a cada fase concluída.
 
-**Última atualização:** 04/08/2026
-**Fase atual:** Fase 9 — Implementação (em andamento — Épico 0 concluído, Épico 1 iniciando)
+**Última atualização:** 06/08/2026
+**Fase atual:** Fase 9 — Implementação (em andamento — Épico 0 concluído; Épico 1 em andamento — model + Alembic concluídos, repository é o próximo passo)
 
 ---
 
@@ -68,7 +68,7 @@ a IA a adotar literalmente o papel abaixo.
 | 6 | Protótipos | ✅ Concluída (8 telas) |
 | 7 | Planejamento de branches | ✅ Concluída |
 | 8 | Backlog | ✅ Concluída |
-| 9 | Implementação | 🔄 Em andamento (Épico 0 concluído — ver seção 12; Épico 1 iniciando — ver seção 14) |
+| 9 | Implementação | 🔄 Em andamento (Épico 0 concluído — ver seção 12; Épico 1 em andamento — ver seção 14) |
 | 10 | Testes | ⬜ Não iniciada |
 | 11 | Deploy | ⬜ Não iniciada |
 | 12 | Documentação final | ⬜ Não iniciada |
@@ -416,32 +416,130 @@ fast-forward simples.
 
 ---
 
-## 14. Próximo passo no momento deste checkpoint — Épico 1 (Autenticação)
+## 14. Progresso da Implementação — Épico 1 (Autenticação, EM ANDAMENTO)
 
-Ainda **não iniciado** na prática. Segue o fatiamento vertical: modelo de
-dados (tabela `usuario`) → repository → service → rota → teste → tela,
-antes de avançar ao Épico 2.
+### Model `Usuario` — CONCLUÍDO
+Criado `backend/app/models/usuario.py`, herdando de `Base`
+(`core/database.py`), usando o estilo moderno do SQLAlchemy
+(`Mapped`/`mapped_column`), coerente com a tipagem forte já adotada no
+projeto (ADR-004/ADR-005). Campos, todos conferidos contra
+`05-modelagem-banco.md`:
 
-**Primeira decisão pendente a ser conduzida com o Product Owner:**
-apresentar (em texto corrido, com trade-offs, sem tabela) o que é um
-"model" do SQLAlchemy, por que ele vem antes do repository nessa ordem
-de fatiamento, e então caminhar para a criação do primeiro model —
-`usuario` — como arquivo `backend/app/models/usuario.py`, herdando de
-`Base` (definido em `core/database.py`).
+```python
+import uuid
+from datetime import datetime
 
-Pontos de negócio já fechados que o model de `usuario` precisa respeitar
-(não perguntar de novo, já decidido — ver ADR-002 e seção 5/7):
-- Matrículas são pré-cadastradas (não há cadastro público de usuário).
-- No primeiro acesso, o operador define seu próprio PIN.
-- PIN deve ser armazenado com hash (`passlib`), nunca em texto puro.
-- Autenticação própria via JWT, não Supabase Auth.
+from sqlalchemy import String, Boolean, DateTime, func
+from sqlalchemy.orm import Mapped, mapped_column
+from sqlalchemy.dialects.postgresql import UUID
 
-A IA deve perguntar ao Product Owner se ele já sabe/lembra os campos
-exatos da tabela `usuario` conforme `05-modelagem-banco.md`, ou se deve
-consultar esse documento antes de propor o model — evitar assumir
-estrutura de campos sem confirmar contra a modelagem já fechada.
+from app.core.database import Base
 
-Alembic (migrations) ainda não foi configurado nesta sessão — deve ser
-tratado como parte do primeiro trabalho prático do Épico 1, junto com o
-model, pois é o mecanismo que vai efetivamente criar a tabela `usuario`
-no banco Supabase a partir do model Python.
+
+class Usuario(Base):
+    __tablename__ = "usuario"
+
+    id: Mapped[uuid.UUID] = mapped_column(
+        UUID(as_uuid=True), primary_key=True, default=uuid.uuid4
+    )
+    matricula: Mapped[str] = mapped_column(String, unique=True, nullable=False)
+    nome: Mapped[str] = mapped_column(String, nullable=False)
+    senha_hash: Mapped[str | None] = mapped_column(String, nullable=True)
+    pin_definido: Mapped[bool] = mapped_column(Boolean, nullable=False, default=False)
+    criado_em: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True), nullable=False, server_default=func.now()
+    )
+```
+
+Decisão de design registrada: `criado_em` usa `server_default=func.now()`
+(o próprio PostgreSQL preenche o timestamp), não `default=datetime.now()`
+do lado da aplicação — evita inconsistência de fuso/instante entre app e
+banco.
+
+### Alembic — CONFIGURADO PELA PRIMEIRA VEZ NO PROJETO (pendência da seção
+11 antiga, agora resolvida)
+- `pip show alembic` confirmou que a lib já estava instalada (via
+  `requirements.txt` do Épico 0), bastando inicializar.
+- `alembic init alembic` rodado dentro de `backend/`, gerando
+  `alembic.ini`, `alembic/env.py`, `alembic/README`,
+  `alembic/script.py.mako` e `alembic/versions/`.
+- `alembic/env.py` editado em dois pontos:
+  1. Carrega `DATABASE_URL` do `.env` via `load_dotenv()` +
+     `config.set_main_option(...)` — a URL do banco **nunca** é escrita no
+     `alembic.ini` (que é versionado), só lida em tempo de execução do
+     `.env` (que é ignorado pelo Git). Checagem de segurança feita
+     manualmente no diff do PR antes do merge.
+  2. Importa `Base` (`core/database.py`) e `Usuario`
+     (`app/models/usuario.py`) e define
+     `target_metadata = Base.metadata`, habilitando o `--autogenerate`.
+- Primeira migration gerada: `alembic revision --autogenerate -m "cria
+  tabela usuario"` → arquivo
+  `alembic/versions/5fcddf9283ef_cria_tabela_usuario.py`, revisado
+  manualmente antes de aplicar (conferido: colunas, tipos, constraints,
+  `server_default`, tudo batendo com o model).
+- Aplicada com `alembic upgrade head` — criou a tabela `usuario` de fato
+  no Supabase. Validado visualmente no Table Editor do Supabase: 6
+  colunas certas, tipos certos.
+- A tabela auxiliar `alembic_version` apareceu automaticamente no banco
+  (controle interno do próprio Alembic, não é uma tabela de domínio do
+  projeto — não confundir com tabelas de `05-modelagem-banco.md`).
+
+### Lição de ambiente registrada nesta sessão
+O `venv` do projeto está em `railops-app/venv` (raiz do repositório
+`railops-app`), **não** em `railops-app/backend/venv` como a Fase 8/9
+anterior deixava em aberto como dúvida. Confirmado via
+`Get-ChildItem -Force` em ambos os níveis. Ativação a partir de
+`backend`, portanto, usa caminho relativo subindo um nível:
+`..\venv\Scripts\Activate.ps1`. Não foi movido, apenas documentado —
+avaliar depois, sem pressa, se vale mover para dentro de `backend` por
+organização (mais comum no mercado ter o venv junto do
+`requirements.txt`).
+
+Também vale registrar: uma sessão nova do PowerShell nunca começa com o
+venv ativado (isso não é uma configuração permanente da pasta) — checar
+sempre com `Get-Command python` (deve apontar para dentro de
+`...\venv\Scripts\...`) antes de instalar ou rodar qualquer coisa
+sensível a ambiente, para não repetir o susto de instalar algo no Python
+global do Windows por engano.
+
+### Branch, PR e merge — CONCLUÍDO (PR #3)
+- Detectado que o trabalho tinha sido iniciado (model + Alembic) direto
+  na `main` local, por descuido. Corrigido sem perda: `git checkout -b
+  feature/model-usuario-alembic` a partir do estado com mudanças ainda
+  não commitadas — o Git levou as mudanças para a branch nova e devolveu
+  a `main` limpa.
+- `.gitignore` do projeto (template padrão GitHub para Python) já cobre
+  `__pycache__/` e `.env` — confirmado que nenhum arquivo de cache ou
+  credencial entrou no commit.
+- Commit único (`feat: cria model Usuario e configura Alembic com
+  primeira migration`) — decisão consciente de não separar model e
+  Alembic em dois commits, pois um não é testável sem o outro nesta
+  entrega.
+- PR #3 aberto, descrição no padrão já estabelecido (O que foi feito /
+  Decisões técnicas / Validação / Próximos passos), auto-revisado
+  (conferência linha a linha do diff, com atenção especial a
+  `alembic.ini` para garantir que nenhuma credencial vazou) e mesclado na
+  `main` do `railops-app`.
+- Sincronização local pós-merge: `git checkout main` + `git pull`
+  (Fast-forward `9a014c9..4fb05dc`) + `git branch -d
+  feature/model-usuario-alembic`. Ciclo completo, igual ao PR #2.
+
+### Próximo passo real — Repository de usuário
+Ainda **não iniciado** na prática. Conforme o backlog do Épico 1
+(`08-backlog.md`):
+- Repository de usuário: buscar por matrícula, criar, atualizar PIN.
+- Em seguida: Service de autenticação (hash de PIN via `passlib`, geração
+  e validação de JWT — ADR-002), depois rotas, tela de login e testes.
+
+Antes de escrever código, a IA deve explicar o papel exato da camada de
+Repository (o que pode e não pode fazer) e por que regra de negócio
+(ex.: hashear o PIN antes de salvar) não pertence a essa camada, e sim à
+camada de Service que vem em seguida — reforçando a separação de
+responsabilidades do ADR-003.
+
+Expectativa de esforço combinada com o Product Owner: esta próxima etapa
+deve ser mais rápida que a anterior, pois toda a infraestrutura (venv,
+Alembic, conexão com banco) já está resolvida — o trabalho agora é
+majoritariamente escrever código de poucas funções, sem a fase de
+"descoberta e correção de ambiente" que consumiu boa parte da sessão
+anterior.
