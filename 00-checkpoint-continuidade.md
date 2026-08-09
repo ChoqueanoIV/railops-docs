@@ -5,8 +5,8 @@
 > perda de contexto, decisões ou metodologia. Deve ser mantido atualizado
 > a cada fase concluída.
 
-**Última atualização:** 06/08/2026
-**Fase atual:** Fase 9 — Implementação (em andamento — Épico 0 concluído; Épico 1 em andamento — model + Alembic concluídos, repository é o próximo passo)
+**Última atualização:** 09/08/2026
+**Fase atual:** Fase 9 — Implementação (em andamento — Épico 0 concluído; Épico 1 em andamento — model, Alembic, repository e service de autenticação concluídos; rotas HTTP são o próximo passo)
 
 ---
 
@@ -543,3 +543,133 @@ Alembic, conexão com banco) já está resolvida — o trabalho agora é
 majoritariamente escrever código de poucas funções, sem a fase de
 "descoberta e correção de ambiente" que consumiu boa parte da sessão
 anterior.
+
+## 15. Novo processo adotado — Issues do GitHub (a partir desta sessão)
+
+Por recomendação de um Software Architect externo (amigo sênior do
+Product Owner) em uma sessão de revisão ao vivo do projeto, passou a ser
+seguido um fluxo de trabalho rastreável via GitHub Issues, além do
+GitHub Flow já em uso (ADR-006):
+
+- Antes de iniciar qualquer entrega de código, abrir uma Issue no
+  repositório `railops-app` descrevendo objetivo, escopo (checklist) e
+  o que fica fora de escopo, com rótulo `enhancement` para novas
+  funcionalidades.
+- Ao abrir o PR correspondente, incluir `Closes #N` na primeira linha da
+  descrição — isso faz o GitHub reconhecer o vínculo automaticamente
+  (visível na barra lateral do PR) e fechar a Issue sozinho assim que o
+  PR é mesclado. Validado funcionando de ponta a ponta com a Issue #4 →
+  PR #5 (repository) e Issue #6 → PR #7 (service de autenticação).
+- Outras duas observações do mesmo Software Architect já estavam
+  cobertas sem esforço adicional: a estrutura de pastas em camadas
+  (models/repositories/services/routers) já seguida desde a ADR-003, e
+  a documentação Swagger/OpenAPI, que o FastAPI gera automaticamente na
+  rota `/docs` assim que existirem rotas reais — ainda não aplicável, pois
+  o Épico 1 ainda não chegou à camada de routers.
+- Daqui em diante, toda nova entrega do backlog deve abrir sua Issue
+  correspondente antes do código, seguindo esse mesmo padrão.
+
+## 16. Progresso da Implementação — Épico 1 (Autenticação), continuação
+
+### Repository de usuário — CONCLUÍDO (Issue #4 → PR #5)
+Criado `backend/app/repositories/usuario_repository.py`. Classe
+`UsuarioRepository`, recebendo a `Session` do banco via injeção de
+dependência no construtor (não cria sua própria conexão — facilita testes
+futuros com banco mock). Três métodos, todos sem nenhuma regra de
+negócio (fronteira reforçada explicitamente com o Product Owner, ver ADR-003):
+
+```python
+class UsuarioRepository:
+    def __init__(self, db: Session):
+        self.db = db
+
+    def buscar_por_matricula(self, matricula: str) -> Usuario | None: ...
+    def criar(self, usuario: Usuario) -> Usuario: ...
+    def atualizar_pin(self, usuario: Usuario, novo_pin_hash: str) -> Usuario: ...
+```
+
+Validado com script manual descartável (`teste_manual.py`, criado, usado
+e apagado dentro da mesma sessão — não deve ser recriado como parte
+permanente do projeto) contra o banco real do Supabase: criação, busca
+por matrícula existente, busca por matrícula inexistente (retorno
+`None`) e atualização de PIN. Todos os registros de teste foram removidos
+do banco manualmente após a validação — este é o padrão a repetir em
+toda validação manual futura (nunca deixar dado de teste no banco real).
+
+### Service de autenticação — CONCLUÍDO (Issue #6 → PR #7)
+Criado `backend/app/services/auth_service.py`. Classe `AuthService`,
+recebendo um `UsuarioRepository` via injeção de dependência (nunca
+acessa `Session`/banco diretamente — toda leitura/escrita passa pelo
+repository). Exceção própria `AutenticacaoError` para os casos de
+negócio inválidos. Dois métodos públicos:
+
+- `primeiro_acesso(matricula, pin)`: valida que a matrícula existe e que
+  o PIN ainda não foi definido, gera hash do PIN via `passlib` (bcrypt) e
+  persiste via repository.
+- `login(matricula, pin)`: valida existência, valida que o PIN já foi
+  definido, verifica o PIN contra o hash salvo (`pwd_context.verify`, sem
+  nunca descriptografar) e, se válido, emite um token JWT (`python-jose`)
+  válido por 8 horas (duração de um turno), assinado com
+  `JWT_SECRET_KEY`.
+
+Novas dependências instaladas: `passlib[bcrypt]`, `python-jose[cryptography]`.
+`requirements.txt` atualizado via `pip freeze` **duas vezes** nesta
+sessão (ver lição de troubleshooting abaixo — a segunda vez foi
+necessária por causa da fixação de versão do bcrypt).
+
+Nova variável de ambiente adicionada ao `.env` (nunca commitada, segue a
+mesma regra do `DATABASE_URL`): `JWT_SECRET_KEY`, gerada com
+`python -c "import secrets; print(secrets.token_hex(32))"`. Não
+reproduzir o valor real deste checkpoint nem em nenhum outro lugar
+versionado — se precisar regenerar, gerar uma nova chave com o mesmo
+comando (isso invalidaria tokens já emitidos, o que é aceitável nesta
+fase pré-produção).
+
+Validado com o mesmo padrão de script manual descartável: primeiro
+acesso, login com PIN correto (token gerado), login com PIN errado
+(bloqueado com `AutenticacaoError`), login em matrícula sem PIN definido
+(bloqueado). Todos os cenários passaram após a correção de
+compatibilidade abaixo.
+
+### Lição de troubleshooting registrada nesta sessão — incompatibilidade passlib/bcrypt
+Ao instalar `passlib[bcrypt]` sem fixar versão, o pip trouxe
+`bcrypt==5.0.0`, que **não é compatível** com `passlib==1.7.4`: a
+partir do bcrypt 4.x, o pacote removido o atributo interno
+`__about__.__version__` que o passlib usa para detectar a versão do
+backend, causando `AttributeError` em cascata que se manifesta como um
+erro de aparência confusa (`ValueError: password cannot be longer than
+72 bytes`) vindo de um autoteste interno do passlib — não é um problema
+com o PIN em si. Correção aplicada: fixar
+`pip install bcrypt==4.0.1` (downgrade explícito). Se o ambiente for
+recriado do zero no futuro (`pip install -r requirements.txt`), o
+arquivo já está corrigido e vai instalar a versão certa automaticamente
+— mas caso alguém rode `pip install --upgrade bcrypt` manualmente por
+qualquer motivo, este problema pode voltar a acontecer.
+
+### Branches, Issues e PRs desta sessão — CONCLUÍDO
+- Issue #4 → branch `feature/repository-usuario` → commit único → PR #5
+  (`Closes #4`) → mesclado → Issue fechada automaticamente → sincronização
+  local (`checkout main` + `pull` + `branch -d`).
+- Issue #6 → branch `feature/service-autenticacao` → commit único → PR #7
+  (`Closes #6`) → mesclado → Issue fechada automaticamente → sincronização
+  local, mesmo padrão.
+- Ambos os ciclos seguiram a mesma rotina de limpeza pré-commit: apagar
+  dado de teste do Supabase e apagar o script `teste_manual.py` antes de
+  `git add`, para nunca commitar sujeira de validação manual.
+
+### Próximo passo real — Rotas HTTP (routers)
+Ainda **não iniciado**. Conforme o backlog do Épico 1 (`08-backlog.md`):
+- `POST /auth/primeiro-acesso`
+- `POST /auth/login`
+- Ambas as rotas devem instanciar `UsuarioRepository` e `AuthService`
+  (usando `get_db()` de `core/database.py` via injeção de dependência do
+  FastAPI, com `Depends`), capturar `AutenticacaoError` e traduzir para
+  respostas HTTP apropriadas (ex.: 401 para credenciais inválidas, 400
+  para erros de validação).
+- Assim que a primeira rota existir, a documentação Swagger/OpenAPI fica
+  disponível automaticamente em `/docs` — não requer nenhuma configuração
+  adicional (ver seção 15).
+- Antes de codar, seguir o novo processo: abrir Issue no `railops-app`
+  descrevendo objetivo/escopo, rótulo `enhancement`, branch
+  `feature/rotas-autenticacao` (ou nome equivalente a combinar), `Closes
+  #N` no PR.
