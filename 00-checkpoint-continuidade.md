@@ -5,8 +5,8 @@
 > perda de contexto, decisões ou metodologia. Deve ser mantido atualizado
 > a cada fase concluída.
 
-**Última atualização:** 09/08/2026
-**Fase atual:** Fase 9 — Implementação (em andamento — Épico 0 concluído; Épico 1 em andamento — model, Alembic, repository e service de autenticação concluídos; rotas HTTP são o próximo passo)
+**Última atualização:** 11/08/2026
+**Fase atual:** Fase 9 — Implementação (em andamento — Épico 0 concluído; Épico 1 concluído até a camada de rota — falta apenas a tela de login para fechar o fatiamento vertical completo)
 
 ---
 
@@ -673,3 +673,60 @@ Ainda **não iniciado**. Conforme o backlog do Épico 1 (`08-backlog.md`):
   descrevendo objetivo/escopo, rótulo `enhancement`, branch
   `feature/rotas-autenticacao` (ou nome equivalente a combinar), `Closes
   #N` no PR.
+
+## 17. Progresso da Implementação — Épico 1 (Autenticação), rotas HTTP
+
+### Rotas de autenticação — CONCLUÍDO (Issue #8 → PR #9)
+Criados `backend/app/schemas/auth_schema.py` (schemas Pydantic
+`PrimeiroAcessoRequest`, `LoginRequest`, `LoginResponse`) e
+`backend/app/routers/auth_router.py` (`APIRouter` com prefixo `/auth`).
+
+Duas rotas implementadas, cada uma instanciando `UsuarioRepository` e
+`AuthService` via `Depends(get_db)`:
+- `POST /auth/primeiro-acesso` — captura `AutenticacaoError` e retorna
+  400
+- `POST /auth/login` — captura `AutenticacaoError` e retorna 401,
+  devolve o token JWT em caso de sucesso
+
+Criado também `backend/main.py`, o entrypoint da aplicação
+(`FastAPI(title="RailOps API")` + `include_router`) — não existia
+nenhum arquivo instanciando `FastAPI()` no projeto até este ponto.
+A partir da criação da primeira rota real, a documentação
+Swagger/OpenAPI passou a ficar disponível em `/docs` automaticamente,
+como previsto.
+
+### Validação manual — CONCLUÍDA
+Testado via Swagger UI, contra o banco real do Supabase, com o servidor
+rodando via `uvicorn main:app --reload`:
+- ✅ Primeiro acesso com sucesso (201)
+- ✅ Primeiro acesso duplicado, PIN já definido (400)
+- ✅ Login com PIN correto (200, token JWT gerado)
+- ✅ Login com PIN incorreto (401)
+
+Matrícula de teste usada: `30032552` (matrícula real do Product Owner),
+inserida via script descartável (criado e apagado na mesma sessão,
+seguindo o padrão já estabelecido). Diferente das validações
+anteriores, este registro **não foi removido do banco** — foi uma
+decisão deliberada do Product Owner, já que é sua matrícula real e será
+reaproveitada como usuário de teste contínuo do projeto daqui em
+diante. Isso é uma exceção documentada à regra geral de "nunca deixar
+dado de teste no banco real" (seção 1) — válida apenas para este
+registro específico.
+
+### Branches, Issues e PRs desta sessão — CONCLUÍDO
+Issue #8 → branch `feature/rotas-autenticacao` → commit único → PR #9
+(`Closes #8`) → mesclado → Issue fechada automaticamente →
+sincronização local (`checkout main` + `pull`, fast-forward
+`03e9f15..45c4f1e`) + `branch -d`. Mesmo padrão dos ciclos anteriores.
+
+### Próximo passo real — Tela de login (frontend)
+Ainda **não iniciado**. Conforme o backlog do Épico 1
+(`08-backlog.md`), falta a última fatia vertical: a tela de login
+consumindo as rotas `/auth/primeiro-acesso` e `/auth/login` recém
+implementadas. Isso fecha o Épico 1 por completo (banco → repository →
+service → rota → teste → tela) antes de avançar ao Épico 2.
+
+Alternativamente, o Product Owner pode optar por deixar as telas de
+todos os épicos para uma fase posterior e avançar direto para o Épico 2
+no backend — essa decisão ainda não foi tomada e deve ser retomada no
+início da próxima sessão.
