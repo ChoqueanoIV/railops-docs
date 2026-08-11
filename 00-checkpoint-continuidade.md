@@ -6,7 +6,7 @@
 > a cada fase concluída.
 
 **Última atualização:** 11/08/2026
-**Fase atual:** Fase 9 — Implementação (em andamento — Épico 0 concluído; Épico 1 concluído até a camada de rota — falta apenas a tela de login para fechar o fatiamento vertical completo)
+**Fase atual:** Fase 9 — Implementação (em andamento — Épico 0 concluído; Épico 1 em fase final: login frontend funcional e integrado; falta concluir o fluxo de primeiro acesso para fechar o fatiamento vertical completo)
 
 ---
 
@@ -730,3 +730,175 @@ Alternativamente, o Product Owner pode optar por deixar as telas de
 todos os épicos para uma fase posterior e avançar direto para o Épico 2
 no backend — essa decisão ainda não foi tomada e deve ser retomada no
 início da próxima sessão.
+
+## 18. Progresso da Implementação — Épico 1 (Autenticação), frontend em andamento
+
+### Issue e branch da entrega
+- Issue **#10 — Implementar tela de login e primeiro acesso** criada no repositório `railops-app`, seguindo o processo adotado a partir da seção 15.
+- Branch criada a partir da `main` limpa e sincronizada: `feature/tela-login`.
+- O trabalho desta sessão ainda **não foi commitado** nem enviado para PR.
+- Próximo PR deverá incluir `Closes #10` na primeira linha da descrição.
+
+### Estrutura inicial do frontend — CRIADA
+Até esta sessão, o repositório possuía apenas `backend/`. Foi iniciada a estrutura real do frontend:
+
+```text
+railops-app/
+├── backend/
+└── frontend/
+    ├── index.html
+    ├── css/
+    │   └── styles.css
+    └── js/
+        └── login.js
+```
+
+A decisão anterior de usar **HTML/CSS no frontend** foi recuperada em `06-prototipos.md`, que registra explicitamente que os mockups de média fidelidade foram feitos em HTML/CSS para poderem evoluir diretamente para componentes reais na Fase 9. Não introduzir React/Vite ou outro framework sem nova decisão arquitetural formal.
+
+### Ambiente frontend confirmado
+- Node.js: `v24.18.0`
+- npm: `11.16.0`
+- Frontend servido localmente com:
+  `npx serve .\frontend`
+- URL local usada durante os testes:
+  `http://localhost:3000`
+- Observação de ambiente: enquanto `npx serve .\frontend` estava em execução, houve um caso em que o Windows bloqueou a sobrescrita de `frontend/js/login.js` com `Set-Content`. A solução prática foi parar temporariamente o `serve` com `Ctrl + C`, editar o arquivo e iniciar o servidor novamente. Se ocorrer de novo, repetir esse procedimento antes de investigar causas mais profundas.
+
+### Tela de login — ESTRUTURA E ESTILO IMPLEMENTADOS
+`frontend/index.html` criado com:
+- título RailOps;
+- subtítulo “Passagem de Serviço Ferroviária”;
+- campo Matrícula;
+- campo PIN;
+- botão Entrar;
+- ação “Primeiro acesso? Definir meu PIN”;
+- área de mensagem com `role="alert"`;
+- referência a `./css/styles.css`;
+- referência a `./js/login.js`.
+
+`frontend/css/styles.css` criado com uma identidade visual inicial:
+- visual corporativo/operacional;
+- fundo claro;
+- cartão centralizado;
+- cor primária azul escuro;
+- campos com foco visível;
+- botão Entrar como ação primária;
+- primeiro acesso como ação secundária;
+- classes de mensagem de erro e sucesso;
+- ajuste responsivo básico para telas menores.
+
+Essa identidade ainda não é branding oficial da MRS; foi tratada apenas como identidade inicial do RailOps, já que os documentos não registravam paleta visual definitiva.
+
+### Integração frontend → backend — FUNCIONAL
+O JavaScript foi evoluído incrementalmente até consumir de fato:
+
+`POST http://127.0.0.1:8000/auth/login`
+
+Fluxo validado:
+- captura matrícula e PIN do formulário;
+- usa `fetch()` com `Content-Type: application/json`;
+- envia JSON no contrato já existente da API;
+- trata respostas de sucesso e erro;
+- exibe mensagem diretamente na tela;
+- guarda o JWT em `sessionStorage` com a chave `access_token`;
+- PIN e token não permanecem sendo exibidos em `console.log` (logs foram usados apenas durante validação pontual e depois removidos).
+
+Primeiro login real ponta a ponta validado com sucesso:
+
+`HTML → JavaScript → CORS → FastAPI → AuthService → UsuarioRepository → Supabase → JWT → frontend`
+
+### CORS — CONFIGURADO NO BACKEND
+`backend/main.py` foi atualizado para usar `CORSMiddleware`, permitindo apenas as origens locais de desenvolvimento:
+
+```text
+http://localhost:3000
+http://127.0.0.1:3000
+```
+
+Não foi usado `allow_origins=["*"]`, por ser permissivo demais para uma API de autenticação.
+
+Configuração atual inclui:
+- `allow_methods=["*"]`
+- `allow_headers=["*"]`
+
+Quando houver deploy, adicionar a URL real do frontend à lista de origens permitidas.
+
+### Validação de matrícula e PIN — FRONTEND E BACKEND
+Decisão tomada nesta sessão:
+- matrícula: **exatamente 8 dígitos**
+- PIN: **exatamente 4 dígitos**
+
+No frontend, os inputs foram atualizados com:
+- `inputmode="numeric"`
+- `minlength`
+- `maxlength`
+- `pattern`
+- `title`
+
+Regras:
+- matrícula: `[0-9]{8}`
+- PIN: `[0-9]{4}`
+
+Testes manuais no navegador:
+- matrícula com 7 dígitos: bloqueada;
+- matrícula com 9º dígito: 9º caractere impedido;
+- PIN com 5º dígito: 5º caractere impedido;
+- PIN com 3 dígitos: bloqueado.
+
+No backend, `backend/app/schemas/auth_schema.py` foi atualizado para usar `Field(pattern=...)` do Pydantic:
+
+```python
+matricula: str = Field(pattern=r"^\d{8}$")
+pin: str = Field(pattern=r"^\d{4}$")
+```
+
+Aplicado tanto a `PrimeiroAcessoRequest` quanto a `LoginRequest`.
+
+Validação direta via Swagger:
+- matrícula com 7 dígitos → HTTP 422;
+- PIN com 3 dígitos → HTTP 422.
+
+Isso confirma RNF06: validação no backend, não apenas no frontend.
+
+### Segurança do login — ENUMERAÇÃO DE USUÁRIOS CORRIGIDA
+Durante os testes foi identificado que o login retornava mensagens diferentes para:
+- matrícula inexistente → “Matrícula não cadastrada.”
+- matrícula existente + PIN errado → “PIN incorreto.”
+- matrícula existente sem PIN → “PIN ainda não foi definido para esta matrícula.”
+
+Isso permitia inferir se uma matrícula existia no sistema (enumeração de usuários).
+
+Decisão aplicada **somente ao fluxo de login**:
+todos esses cenários agora retornam:
+
+`Matrícula ou PIN inválidos.`
+
+O método `primeiro_acesso()` foi mantido sem alteração nesta sessão, pois seu fluxo de segurança precisa ser discutido separadamente.
+
+Durante essa correção houve um erro de digitação temporário:
+`AutenticacaoErro` foi usado no lugar da classe real `AutenticacaoError`, gerando `NameError`, HTTP 500 e uma mensagem aparente de CORS no navegador. A causa raiz foi identificada pelo traceback do Uvicorn e corrigida. Lição reforçada: quando o navegador mostrar CORS junto com HTTP 500, verificar primeiro o traceback do backend antes de concluir que CORS é a causa.
+
+Testes finais:
+- matrícula inexistente + PIN qualquer → “Matrícula ou PIN inválidos.”
+- matrícula válida + PIN incorreto → mesma mensagem;
+- matrícula válida + PIN correto → login realizado com sucesso.
+
+### Primeiro acesso — AINDA NÃO IMPLEMENTADO NO FRONTEND
+A ação “Definir meu PIN” já existe visualmente no HTML, mas ainda não possui comportamento JavaScript.
+
+Próximo passo real ao retomar:
+1. revisar o fluxo de segurança do primeiro acesso;
+2. decidir como evitar que uma pessoa informe a matrícula de outro colaborador e defina o PIN dele;
+3. implementar o comportamento da ação “Definir meu PIN” consumindo `POST /auth/primeiro-acesso`;
+4. validar PIN e confirmação de PIN;
+5. testar sucesso e erros;
+6. só então considerar o Épico 1 fechado de ponta a ponta.
+
+### Estado da sessão ao pausar
+- Frontend parado com `Ctrl + C`.
+- Backend/Uvicorn parado com `Ctrl + C`.
+- Branch atual de trabalho: `feature/tela-login`.
+- Alterações desta sessão ainda não commitadas.
+- `railops-docs` havia sido atualizado e publicado antes do início desta implementação, com commit de checkpoint anterior já enviado à `main`.
+- Ao retomar, executar primeiro `git status` em `railops-app` para conferir a working tree antes de qualquer novo comando.
+
