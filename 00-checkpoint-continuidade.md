@@ -5,10 +5,9 @@
 > perda de contexto, decisões ou metodologia. Deve ser mantido
 > atualizado a cada fase concluída.
 
-**Última atualização:** 11/08/2026 **Fase atual:** Fase 9 ---
-Implementação (em andamento --- Épico 0 concluído; Épico 1 em fase
-final: login frontend funcional e integrado; falta concluir o fluxo de
-primeiro acesso para fechar o fatiamento vertical completo)
+**Última atualização:** 13/08/2026 **Fase atual:** Fase 9 ---
+Implementação (em andamento --- Épicos 0 e 1 concluídos; próximo passo:
+iniciar o Épico 2, Preenchimento --- Núcleo + Brisamar)
 
 ------------------------------------------------------------------------
 
@@ -84,11 +83,9 @@ instrua a IA a adotar literalmente o papel abaixo.
 
   8                       Backlog                 ✅ Concluída
 
-  9                       Implementação           🔄 Em andamento (Épico
-                                                  0 concluído --- ver
-                                                  seção 12; Épico 1 em
-                                                  andamento --- ver seção
-                                                  14)
+  9                       Implementação           🔄 Em andamento (Épicos
+                                                  0 e 1 concluídos; próximo:
+                                                  Épico 2 --- ver seção 20)
 
   10                      Testes                  ⬜ Não iniciada
 
@@ -309,8 +306,8 @@ funcionalidade completa de ponta a ponta antes do próximo:
 0.  Fundação do Projeto (estrutura de pastas, conexão DB, Alembic, seed,
     health check, proteção de branch) --- **✅ CONCLUÍDO** (ver seção
     12)
-1.  Autenticação (UC01) --- **🔄 INICIANDO** (ver seção 14)
-2.  Preenchimento --- Núcleo + Brisamar (UC02)
+1.  Autenticação (UC01) --- **✅ CONCLUÍDO** (ver seção 20)
+2.  Preenchimento --- Núcleo + Brisamar (UC02) --- **PRÓXIMO**
 3.  Preenchimento --- TECON (UC02, RN10)
 4.  Edição e Histórico (UC04)
 5.  Consulta (UC03)
@@ -334,10 +331,10 @@ assumir). PostgreSQL não instalado localmente --- banco é 100% Supabase
     (só existiu um script de teste manual de conexão, já removido de
     propósito --- ver seção 12). Quando for a hora de implementar, deve
     ser uma rota FastAPI (ex.: `GET /health`), não um script solto.
--   Alembic (migrations) mencionado no backlog do Épico 0, mas a
-    configuração/primeira migration ainda não foi feita nesta sessão ---
-    confirmar com o Product Owner se isso já existe ou se entra junto
-    com o primeiro model do Épico 1.
+-   **Alembic --- resolvido:** configuração e primeira migration já
+    existiam; a migration `7cfb74542084` foi criada e aplicada durante o
+    fechamento do Épico 1. Manter migrations versionadas em todos os
+    próximos incrementos que alterarem o schema.
 
 ------------------------------------------------------------------------
 
@@ -1225,3 +1222,104 @@ migration → evoluir backend → implementar frontend.**
 
 Nenhuma alteração referente ao código de ativação foi aplicada ao
 `railops-app` até este checkpoint.
+
+------------------------------------------------------------------------
+
+## 20. Fechamento do Épico 1 --- Autenticação (CONCLUÍDO)
+
+### Código de ativação de uso único --- IMPLEMENTADO
+
+O fluxo de primeiro acesso foi protegido com código de ativação de seis
+dígitos. O model `Usuario` recebeu `codigo_ativacao_hash`, opcional, e a
+migration Alembic `7cfb74542084_adiciona_codigo_de_ativacao_ao_usuario.py`
+foi criada, revisada e aplicada no Supabase.
+
+O código nunca é armazenado em texto puro. O backend compara o valor
+informado com o hash usando `passlib`/bcrypt. Em uma ativação válida, o
+repository salva o hash do novo PIN, define `pin_definido = true` e apaga
+`codigo_ativacao_hash` no mesmo commit, garantindo uso único.
+
+Para evitar enumeração de usuários, matrícula inexistente, conta já
+ativada, código ausente ou código incorreto retornam a mesma mensagem:
+`Dados de ativação inválidos.`
+
+### Backend e contrato HTTP --- CONCLUÍDOS
+
+-   `PrimeiroAcessoRequest` exige matrícula com 8 dígitos, código de
+    ativação com 6 dígitos e PIN com 4 dígitos;
+-   `AuthService.primeiro_acesso()` valida matrícula, estado da conta e
+    hash do código;
+-   `UsuarioRepository.ativar_usuario()` persiste o PIN e invalida o
+    código atomicamente;
+-   `POST /auth/primeiro-acesso` encaminha o novo contrato e responde
+    HTTP 201 em caso de sucesso;
+-   a migration aplicada deixou o banco na revisão `7cfb74542084 (head)`.
+
+### Testes --- CONCLUÍDOS
+
+Foi adicionada a primeira estrutura automatizada de testes do projeto,
+com `pytest==9.1.1`, `pytest.ini` na raiz e
+`backend/tests/test_auth_service.py`.
+
+Sete cenários automatizados passam:
+
+1.  ativação bem-sucedida e invalidação do código;
+2.  código incorreto;
+3.  matrícula inexistente;
+4.  usuário já ativado;
+5.  tentativa de reutilização do código;
+6.  código fora do formato;
+7.  PIN fora do formato.
+
+Também foi executado teste HTTP real com usuário fictício descartável:
+frontend/HTTP → FastAPI → service → repository → Supabase. A rota
+respondeu 201, o banco confirmou PIN definido e código invalidado, e o
+registro fictício foi removido ao final. Nenhum script temporário foi
+versionado.
+
+### Frontend de primeiro acesso --- CONCLUÍDO
+
+A tela existente passou a alternar entre login e primeiro acesso sem
+introduzir framework novo. O modo de ativação contém:
+
+-   matrícula;
+-   código de ativação;
+-   novo PIN;
+-   confirmação do PIN;
+-   validação de igualdade dos PINs antes da requisição;
+-   integração com `POST /auth/primeiro-acesso`;
+-   retorno automático ao modo login após sucesso;
+-   bloqueio dos botões durante a requisição para evitar troca de modo e
+    mensagens fora de contexto.
+
+O comportamento foi validado no navegador, sem erros no console. O login
+normal continua integrado a `POST /auth/login` e armazena o JWT em
+`sessionStorage`.
+
+### GitHub Flow --- CONCLUÍDO
+
+-   Issue: **#10 --- Implementar tela de login e primeiro acesso**;
+-   branch: `feature/tela-login`;
+-   commits principais: `26769db` e `123440b`;
+-   PR: **#11 --- feat: implementa login e primeiro acesso**;
+-   merge commit: `889c738`;
+-   Issue #10 fechada automaticamente por `Closes #10`;
+-   `main` local sincronizada com `origin/main` e working tree limpa;
+-   branch `feature/tela-login` preservada local e remotamente até
+    decisão explícita de limpeza.
+
+### Estado atual e próximo passo real
+
+O **Épico 1 está concluído de ponta a ponta**: banco → repository →
+service → rota → testes → tela.
+
+Próximo passo: iniciar o **Épico 2 --- Preenchimento: Núcleo + Brisamar
+(UC02)**. Antes de codar:
+
+1.  revisar o escopo do Épico 2 em `08-backlog.md`;
+2.  revisar UC02, regras de negócio relacionadas e modelagem das tabelas;
+3.  conferir o protótipo das telas envolvidas;
+4.  definir a primeira fatia implementável do Épico 2;
+5.  abrir nova Issue com rótulo `enhancement`;
+6.  criar branch a partir da `main` limpa e sincronizada;
+7.  manter o fatiamento vertical e testes passando antes de avançar.
