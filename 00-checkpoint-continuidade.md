@@ -1396,3 +1396,29 @@ Todos os commits estão com autoria de Leandro CHOQUE
 4.  abrir PR para `main` com `Closes #12` na descrição;
 5.  aguardar e conferir os checks antes do merge;
 6.  após o merge, sincronizar a `main` e atualizar este checkpoint.
+
+### Complemento de 14/08/2026 --- confirmação concluída
+
+A tela de confirmação foi concluída no commit `d5998f6`. Após HTTP 201,
+o frontend encaminha o usuário para `confirmacao.html`, que apresenta
+terminal, data, turno e protocolo da passagem registrada. A tela oferece
+como ação principal o encadeamento para o TECON e, como alternativa, a
+conclusão com retorno ao início. Como o formulário TECON pertence ao
+Épico 3, a interface informa explicitamente que ele será disponibilizado
+no próximo épico.
+
+O acesso direto sem dados de uma passagem recém-salva retorna à seleção
+de terminal, e os dados temporários da confirmação são consumidos uma
+única vez.
+
+Validação final da branch `feature/passagem-brisamar`:
+
+-   30 testes automatizados passam;
+-   todos os scripts JavaScript passam em `node --check`;
+-   `git diff --check main...HEAD` não encontrou erros;
+-   revisão completa encontrou 27 arquivos no escopo e nenhum segredo;
+-   os 11 commits estão com autoria de Leandro CHOQUE;
+-   working tree limpa.
+
+Próximo passo: publicar `feature/passagem-brisamar` e abrir o PR da
+Issue #12 com `Closes #12` na descrição.

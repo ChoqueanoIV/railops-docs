@@ -64,7 +64,7 @@ Caso de Uso específico.
 - [x] Rota `POST /passagens/brisamar`
 - [x] Tela de escolha de terminal (a partir do protótipo da Fase 6)
 - [x] Tela do formulário Brisamar (a partir do protótipo da Fase 6)
-- [ ] Tela de confirmação de envio, com encadeamento para o TECON (Tela 8
+- [x] Tela de confirmação de envio, com encadeamento para o TECON (Tela 8
   da Fase 6)
 - [x] Testes automatizados: envio válido, Sup/Inf inválido em linha não
   permitida, campo obrigatório ausente
