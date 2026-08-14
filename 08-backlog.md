@@ -54,19 +54,19 @@ Caso de Uso específico.
 
 ## Épico 2 — Preenchimento da Passagem: Núcleo + Pátio Brisamar (UC02, RN01, RN02, RN04–RN09)
 
-- [ ] Modelos SQLAlchemy: `passagem_servico`, `passagem_linha_ocupacao`,
+- [x] Modelos SQLAlchemy: `passagem_servico`, `passagem_linha_ocupacao`,
   `equipe_membro`, `passagem_brisamar_detalhe`, `radio`,
   `passagem_radio_uso`
-- [ ] Repositories correspondentes
-- [ ] Service: validação de Sup/Inf restrito às linhas 22 e 24 (RN06)
-- [ ] Service: validação de campos obrigatórios do núcleo e do detalhe
+- [x] Repositories correspondentes
+- [x] Service: validação de Sup/Inf restrito às linhas 22 e 24 (RN06)
+- [x] Service: validação de campos obrigatórios do núcleo e do detalhe
   Brisamar
-- [ ] Rota `POST /passagens/brisamar`
-- [ ] Tela de escolha de terminal (a partir do protótipo da Fase 6)
-- [ ] Tela do formulário Brisamar (a partir do protótipo da Fase 6)
-- [ ] Tela de confirmação de envio, com encadeamento para o TECON (Tela 8
+- [x] Rota `POST /passagens/brisamar`
+- [x] Tela de escolha de terminal (a partir do protótipo da Fase 6)
+- [x] Tela do formulário Brisamar (a partir do protótipo da Fase 6)
+- [x] Tela de confirmação de envio, com encadeamento para o TECON (Tela 8
   da Fase 6)
-- [ ] Testes automatizados: envio válido, Sup/Inf inválido em linha não
+- [x] Testes automatizados: envio válido, Sup/Inf inválido em linha não
   permitida, campo obrigatório ausente
 
 ## Épico 3 — Preenchimento da Passagem: Terminal TECON (UC02, RN10)

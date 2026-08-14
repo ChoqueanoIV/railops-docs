@@ -1323,3 +1323,102 @@ Próximo passo: iniciar o **Épico 2 --- Preenchimento: Núcleo + Brisamar
 5.  abrir nova Issue com rótulo `enhancement`;
 6.  criar branch a partir da `main` limpa e sincronizada;
 7.  manter o fatiamento vertical e testes passando antes de avançar.
+
+------------------------------------------------------------------------
+
+## 21. Atualização de continuidade --- Épico 2 / Brisamar (13/08/2026)
+
+### Estado da Issue #12
+
+A Issue **#12 --- Implementar passagem de serviço do Pátio Brisamar**
+foi implementada na branch `feature/passagem-brisamar`. A branch ainda
+não foi publicada e o PR ainda não foi aberto neste checkpoint.
+
+Foram concluídos:
+
+-   validação de JWT para rotas protegidas;
+-   modelos e migration das tabelas do núcleo e detalhe Brisamar;
+-   seed das linhas 16, 18, 20, 22, 24, 26, 28 e 30;
+-   repositories, schemas e service;
+-   regra SUP/INF obrigatória apenas para 22 e 24;
+-   rota autenticada `POST /passagens/brisamar`;
+-   tela de escolha do terminal;
+-   formulário completo do Brisamar;
+-   envio do formulário com JWT e tratamento de sucesso, validação e
+    sessão expirada.
+
+A tela de confirmação/encadeamento para o TECON permanece pendente. Ela
+deve ser implementada depois do envio bem-sucedido, sem iniciar ainda o
+formulário específico do TECON.
+
+### Banco e migration
+
+A migration `eb6f25372f82_cria_estrutura_da_passagem_brisamar.py` foi
+aplicada ao Supabase. O banco ficou na revisão `eb6f25372f82 (head)` e o
+seed das oito linhas do Brisamar foi conferido por leitura.
+
+### Validação
+
+-   30 testes automatizados passam;
+-   o contrato JSON do frontend foi comparado com
+    `PassagemBrisamarRequest`;
+-   a aplicação carregou a rota protegida no OpenAPI;
+-   um teste HTTP real percorreu Uvicorn → FastAPI → service → repository
+    → Supabase e respondeu HTTP 201;
+-   o banco confirmou passagem, oito ocupações de linha, equipe, rádio
+    utilizado e detalhe Brisamar.
+
+O registro do teste ponta a ponta foi mantido no banco, claramente
+identificado pelo turno `TESTE-E2E`, ID
+`cd22ddab-cbd4-48ad-9220-4d01a448cf0a`.
+
+### Commits da branch de implementação
+
+-   `f6cd911` --- validação de JWT;
+-   `3f70b26` --- estrutura e migration da passagem;
+-   `69af2b6` --- cadastro backend do Brisamar;
+-   `aafb90e` --- escolha do terminal;
+-   `9a96704` --- dados do turno e equipe;
+-   `3a8bc80` --- ocupação das linhas;
+-   `09f1814` --- registros gerais;
+-   `e5031b0` --- recursos entregues;
+-   `858fc4d` --- rádios utilizados;
+-   `8b1dd1d` --- integração do formulário com a API.
+
+Todos os commits estão com autoria de Leandro CHOQUE
+`<leandro.cristine1@gmail.com>` e sem trailers de coautoria de IA.
+
+### Próximo passo exato
+
+1.  concluir a tela de confirmação de envio e encadeamento para o TECON;
+2.  executar novamente os testes e uma revisão do diff completo;
+3.  publicar `feature/passagem-brisamar`;
+4.  abrir PR para `main` com `Closes #12` na descrição;
+5.  aguardar e conferir os checks antes do merge;
+6.  após o merge, sincronizar a `main` e atualizar este checkpoint.
+
+### Complemento de 14/08/2026 --- confirmação concluída
+
+A tela de confirmação foi concluída no commit `d5998f6`. Após HTTP 201,
+o frontend encaminha o usuário para `confirmacao.html`, que apresenta
+terminal, data, turno e protocolo da passagem registrada. A tela oferece
+como ação principal o encadeamento para o TECON e, como alternativa, a
+conclusão com retorno ao início. Como o formulário TECON pertence ao
+Épico 3, a interface informa explicitamente que ele será disponibilizado
+no próximo épico.
+
+O acesso direto sem dados de uma passagem recém-salva retorna à seleção
+de terminal, e os dados temporários da confirmação são consumidos uma
+única vez.
+
+Validação final da branch `feature/passagem-brisamar`:
+
+-   30 testes automatizados passam;
+-   todos os scripts JavaScript passam em `node --check`;
+-   `git diff --check main...HEAD` não encontrou erros;
+-   revisão completa encontrou 27 arquivos no escopo e nenhum segredo;
+-   os 11 commits estão com autoria de Leandro CHOQUE;
+-   working tree limpa.
+
+Próximo passo: publicar `feature/passagem-brisamar` e abrir o PR da
+Issue #12 com `Closes #12` na descrição.
