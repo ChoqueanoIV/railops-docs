@@ -83,9 +83,9 @@ Caso de Uso específico.
 
 ## Épico 4 — Edição e Histórico (UC04, RN01, RN02)
 
-- [ ] Modelo SQLAlchemy: `passagem_servico_historico`
-- [ ] Repository: criação de snapshot antes de atualizar
-- [ ] Service: validação de janela de edição (apenas dentro do próprio
+- [x] Modelo SQLAlchemy: `passagem_servico_historico`
+- [x] Repository: criação de snapshot antes de atualizar
+- [x] Service: validação de janela de edição (apenas dentro do próprio
   turno — RN01)
 - [ ] Rota `PUT /passagens/{id}`
 - [ ] Testes automatizados: edição dentro do turno (sucesso), edição fora
