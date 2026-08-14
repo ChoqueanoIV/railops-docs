@@ -40,16 +40,16 @@ Caso de Uso específico.
 
 ## Épico 1 — Autenticação (UC01)
 
-- [ ] Modelo SQLAlchemy da tabela `usuario`
-- [ ] Repository de usuário (buscar por matrícula, criar, atualizar PIN)
-- [ ] Service de autenticação: hashing de PIN (`passlib`), geração e
+- [x] Modelo SQLAlchemy da tabela `usuario`
+- [x] Repository de usuário (buscar por matrícula, criar, atualizar PIN)
+- [x] Service de autenticação: hashing de PIN (`passlib`), geração e
   validação de JWT — ADR-002
-- [ ] Service: fluxo de primeiro acesso (matrícula pré-cadastrada define
+- [x] Service: fluxo de primeiro acesso (matrícula pré-cadastrada define
   PIN) — ADR-002
-- [ ] Rota `POST /auth/login`
-- [ ] Rota `POST /auth/primeiro-acesso`
-- [ ] Tela de login (HTML/CSS, a partir do protótipo da Fase 6)
-- [ ] Testes automatizados: login válido, credenciais inválidas,
+- [x] Rota `POST /auth/login`
+- [x] Rota `POST /auth/primeiro-acesso`
+- [x] Tela de login (HTML/CSS, a partir do protótipo da Fase 6)
+- [x] Testes automatizados: login válido, credenciais inválidas,
   matrícula não pré-cadastrada (RN04)
 
 ## Épico 2 — Preenchimento da Passagem: Núcleo + Pátio Brisamar (UC02, RN01, RN02, RN04–RN09)
@@ -71,14 +71,14 @@ Caso de Uso específico.
 
 ## Épico 3 — Preenchimento da Passagem: Terminal TECON (UC02, RN10)
 
-- [ ] Modelo SQLAlchemy: `passagem_tecon_detalhe`, com `houve_atendimento`
-- [ ] Repository correspondente
-- [ ] Service: validação condicional conforme RN10 (campos de Área 1/Área
+- [x] Modelo SQLAlchemy: `passagem_tecon_detalhe`, com `houve_atendimento`
+- [x] Repository correspondente
+- [x] Service: validação condicional conforme RN10 (campos de Área 1/Área
   2 obrigatórios apenas se atendidos individualmente)
-- [ ] Rota `POST /passagens/tecon`
-- [ ] Tela do formulário TECON, com pergunta condicional e Áreas 1/2
+- [x] Rota `POST /passagens/tecon`
+- [x] Tela do formulário TECON, com pergunta condicional e Áreas 1/2
   independentes (a partir do protótipo da Fase 6)
-- [ ] Testes automatizados: sem atendimento (só linhas), atendimento
+- [x] Testes automatizados: sem atendimento (só linhas), atendimento
   parcial (só uma área), atendimento completo
 
 ## Épico 4 — Edição e Histórico (UC04, RN01, RN02)
