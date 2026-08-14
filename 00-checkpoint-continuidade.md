@@ -5,9 +5,9 @@
 > perda de contexto, decisões ou metodologia. Deve ser mantido
 > atualizado a cada fase concluída.
 
-**Última atualização:** 13/08/2026 **Fase atual:** Fase 9 ---
-Implementação (em andamento --- Épicos 0 e 1 concluídos; próximo passo:
-iniciar o Épico 2, Preenchimento --- Núcleo + Brisamar)
+**Última atualização:** 14/08/2026 **Fase atual:** Fase 9 ---
+Implementação (em andamento --- Épicos 0 a 3 concluídos; próximo passo:
+concluir os PRs do Épico 3 e iniciar o Épico 4, Edição e Histórico)
 
 ------------------------------------------------------------------------
 
@@ -84,8 +84,8 @@ instrua a IA a adotar literalmente o papel abaixo.
   8                       Backlog                 ✅ Concluída
 
   9                       Implementação           🔄 Em andamento (Épicos
-                                                  0 e 1 concluídos; próximo:
-                                                  Épico 2 --- ver seção 20)
+                                                  0 a 3 concluídos; próximo:
+                                                  Épico 4 --- ver seção 22)
 
   10                      Testes                  ⬜ Não iniciada
 
