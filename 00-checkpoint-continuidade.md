@@ -6,8 +6,8 @@
 > atualizado a cada fase concluída.
 
 **Última atualização:** 14/08/2026 **Fase atual:** Fase 9 ---
-Implementação (em andamento --- Épicos 0 a 3 concluídos; próximo passo:
-concluir os PRs do Épico 3 e iniciar o Épico 4, Edição e Histórico)
+Implementação (em andamento --- Épicos 0 a 3 concluídos; Épico 4 em
+andamento na branch `feature/edicao-historico` --- ver seção 23)
 
 ------------------------------------------------------------------------
 
@@ -84,8 +84,8 @@ instrua a IA a adotar literalmente o papel abaixo.
   8                       Backlog                 ✅ Concluída
 
   9                       Implementação           🔄 Em andamento (Épicos
-                                                  0 a 3 concluídos; próximo:
-                                                  Épico 4 --- ver seção 22)
+                                                  0 a 3 concluídos; Épico 4
+                                                  em andamento --- seção 23)
 
   10                      Testes                  ⬜ Não iniciada
 
@@ -1502,3 +1502,109 @@ Todos os commits estão com autoria de Leandro CHOQUE
 4.  aguardar e conferir o estado de merge;
 5.  após autorização, mesclar o PR e confirmar o fechamento da Issue #14;
 6.  sincronizar a `main` e atualizar este checkpoint.
+
+------------------------------------------------------------------------
+
+## 23. Atualização de continuidade --- Épico 4 parcial (14/08/2026)
+
+### Estado anterior concluído
+
+O PR `railops-app#15` foi mesclado em `main` pelo commit `7426034` e
+fechou a Issue #14. O PR `railops-docs#2` foi mesclado pelo commit
+`c35d121`. Os READMEs do app e da documentação foram atualizados nas
+páginas principais.
+
+### Regra operacional confirmada
+
+-   existem quatro **turmas**: A, B, C e D;
+-   turno **DIURNO**: 07h às 19h;
+-   turno **NOTURNO**: 19h às 07h do dia seguinte;
+-   a data do turno noturno é a data em que ele começa às 19h;
+-   o preenchimento nos 15 minutos finais é orientação operacional, sem
+    bloqueio no sistema;
+-   somente o autor pode editar enquanto o próprio turno estiver em
+    andamento;
+-   no instante do encerramento, a passagem passa a ser somente leitura.
+
+O campo antigo confundia turma com turno. Novas passagens agora exigem
+`turma` (A/B/C/D) e `turno` (DIURNO/NOTURNO) separadamente. Os quatro
+registros de teste anteriores foram preservados em `turno_legado`, sem
+atribuir turma ou turno fictícios.
+
+### Estado da Issue #16
+
+A Issue **#16 --- Implementar edição e histórico de passagens** está em
+andamento na branch `feature/edicao-historico`, publicada em
+`origin/feature/edicao-historico`.
+
+Concluído até este checkpoint:
+
+-   enums e campos separados de turma e turno;
+-   formulários Brisamar/TECON e confirmação adaptados;
+-   tabela `passagem_servico_historico` com snapshot JSONB, versão,
+    autor e horário;
+-   repository com carregamento completo, bloqueio de linha, snapshot,
+    próxima versão, commit e rollback transacionais;
+-   service validando existência, autoria, registro legado e janela
+    temporal no fuso `America/Sao_Paulo`;
+-   configuração centralizada de `backend/.env`;
+-   falha antecipada quando `DATABASE_URL` ou `JWT_SECRET_KEY` estiverem
+    ausentes/vazias.
+
+Ainda pendente no Épico 4:
+
+-   schema com os dados permitidos na edição;
+-   aplicação das alterações somente após validação;
+-   rota autenticada `PUT /passagens/{id}`;
+-   frontend para carregar e editar uma passagem existente;
+-   teste ponta a ponta de edição e confirmação do snapshot no Supabase.
+
+### Migrations e banco
+
+-   `c6d8e1f2a3b4` separou turma/turno e criou o histórico;
+-   `d7e9f2a3b4c5` tornou `turno_legado` anulável;
+-   Supabase e código estão em `d7e9f2a3b4c5 (head)`;
+-   os quatro registros antigos continuam preservados;
+-   teste transacional real confirmou uma nova passagem Turma C/Diurno e
+    snapshot versão 1, seguido de rollback sem persistência residual.
+
+Durante a auditoria, foi detectado que `turno_legado` havia permanecido
+`NOT NULL`, bloqueando novas passagens. A correção foi aplicada por uma
+nova migration, sem reescrever a migration já executada. Também foram
+corrigidos o carregamento do `.env` a partir da raiz e a validação da
+chave JWT na inicialização.
+
+### Validação atual
+
+-   73 testes automatizados passam;
+-   `git fsck` e `git diff --check` passam;
+-   backend compila integralmente;
+-   scripts JavaScript passam em `node --check`;
+-   `pip check` não encontrou dependências quebradas;
+-   OpenAPI respondeu HTTP 200 em servidor local real;
+-   login inválido e rota sem token responderam HTTP 401;
+-   nenhum segredo foi encontrado nos arquivos versionados;
+-   working tree do app limpa e branch sincronizada com o remoto.
+
+### Commits atuais da branch
+
+-   `f9e9888` --- estrutura de edição e histórico;
+-   `c7ba552` --- separação de turma e turno;
+-   `3f7dbed` --- snapshots do histórico;
+-   `0cb8365` --- janela de edição;
+-   `73e69a9` --- correção de `turno_legado` anulável;
+-   `018b1eb` --- configuração centralizada do ambiente.
+
+Todos os commits estão com autoria de Leandro CHOQUE
+`<leandro.cristine1@gmail.com>` e sem trailers de coautoria de IA.
+
+### Próximo passo exato ao retomar
+
+1.  confirmar que `railops-app` está em `feature/edicao-historico` e
+    sincronizada com `origin/feature/edicao-historico`;
+2.  criar o schema de edição de acordo com o terminal da passagem;
+3.  implementar no service a sequência validar → snapshot → alterar →
+    commit único;
+4.  adicionar testes de sucesso e rollback sem criar ainda a rota;
+5.  somente depois criar `PUT /passagens/{id}` e integrar o frontend;
+6.  manter os 73 testes existentes passando antes de cada incremento.
