@@ -71,14 +71,14 @@ Caso de Uso específico.
 
 ## Épico 3 — Preenchimento da Passagem: Terminal TECON (UC02, RN10)
 
-- [ ] Modelo SQLAlchemy: `passagem_tecon_detalhe`, com `houve_atendimento`
-- [ ] Repository correspondente
-- [ ] Service: validação condicional conforme RN10 (campos de Área 1/Área
+- [x] Modelo SQLAlchemy: `passagem_tecon_detalhe`, com `houve_atendimento`
+- [x] Repository correspondente
+- [x] Service: validação condicional conforme RN10 (campos de Área 1/Área
   2 obrigatórios apenas se atendidos individualmente)
-- [ ] Rota `POST /passagens/tecon`
-- [ ] Tela do formulário TECON, com pergunta condicional e Áreas 1/2
+- [x] Rota `POST /passagens/tecon`
+- [x] Tela do formulário TECON, com pergunta condicional e Áreas 1/2
   independentes (a partir do protótipo da Fase 6)
-- [ ] Testes automatizados: sem atendimento (só linhas), atendimento
+- [x] Testes automatizados: sem atendimento (só linhas), atendimento
   parcial (só uma área), atendimento completo
 
 ## Épico 4 — Edição e Histórico (UC04, RN01, RN02)

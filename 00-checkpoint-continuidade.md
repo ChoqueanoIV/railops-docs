@@ -1422,3 +1422,83 @@ Validação final da branch `feature/passagem-brisamar`:
 
 Próximo passo: publicar `feature/passagem-brisamar` e abrir o PR da
 Issue #12 com `Closes #12` na descrição.
+
+------------------------------------------------------------------------
+
+## 22. Atualização de continuidade --- Épico 3 / TECON (14/08/2026)
+
+### Estado anterior concluído
+
+O PR `railops-app#13` foi mesclado em `main` pelo commit `4028ad0` e
+fechou automaticamente a Issue #12. O PR `railops-docs#1` foi mesclado
+pelo commit `44a6661`. As branches de trabalho foram preservadas.
+
+### Estado da Issue #14
+
+A Issue **#14 --- Implementar passagem de serviço do Terminal TECON**
+foi implementada na branch `feature/passagem-tecon`. A branch ainda não
+foi publicada e o PR ainda não foi aberto neste checkpoint.
+
+Foram concluídos:
+
+-   modelo `passagem_tecon_detalhe` e relação um-para-um com a passagem;
+-   migration `b941bba1882e` aplicada ao Supabase;
+-   seed das linhas `Viaduto/DM1A`, `L1`, `L2`, `Travessão`, `DM4`,
+    `DM6`, `DM1`, `DM3` e `Funil/DM2`;
+-   schemas condicionais de RN10;
+-   service com validação das nove linhas e persistência transacional;
+-   rota autenticada `POST /passagens/tecon`;
+-   formulário TECON completo;
+-   vistoria de carga e descrição condicional;
+-   Áreas 1 (Píer) e 2 (Galpão) independentes;
+-   rádios utilizados e envio autenticado;
+-   confirmação com encadeamento bidirecional Brisamar ↔ TECON.
+
+### Validação
+
+-   48 testes automatizados passam;
+-   o OpenAPI confirmou HTTP 201 e autenticação Bearer na rota TECON;
+-   o contrato JSON do frontend foi comparado com
+    `PassagemTeconRequest`;
+-   os scripts JavaScript passam em `node --check`;
+-   três testes HTTP reais percorreram Uvicorn → FastAPI → service →
+    repository → Supabase e responderam HTTP 201.
+
+Registros de teste mantidos no Supabase:
+
+-   sem atendimento: `b963d812-bd6b-4806-899f-776386d2bedc`;
+-   atendimento parcial: `ab095828-76c7-4be2-888e-4e21772944be`;
+-   atendimento completo: `baf1c543-a705-4a28-a56d-22aaf61c6ae0`.
+
+O cenário sem atendimento manteve as duas áreas nulas; o parcial gravou
+somente a Área 1; o completo gravou as duas áreas. Todos foram
+confirmados com nove ocupações de linha e um membro de equipe.
+
+Durante a primeira tentativa do E2E, o terminal converteu `Travessão`
+para `Travess?o`. A requisição foi corretamente rejeitada com HTTP 400 e
+nenhum registro foi criado. O script temporário foi corrigido com escape
+Unicode e os três cenários passaram; frontend, migration e banco já
+continham o texto correto.
+
+### Commits da branch de implementação
+
+-   `270e9cd` --- estrutura, migration e seed do TECON;
+-   `31549fc` --- schemas e validações condicionais;
+-   `eeab253` --- regras do service;
+-   `bc6b5d1` --- rota autenticada;
+-   `9bab4e8` --- núcleo visual do formulário;
+-   `da3d04f` --- registros gerais e pergunta de atendimento;
+-   `2f2e8dd` --- vistoria e áreas independentes;
+-   `9decc1a` --- rádios, envio e confirmação bidirecional.
+
+Todos os commits estão com autoria de Leandro CHOQUE
+`<leandro.cristine1@gmail.com>` e sem trailers de coautoria de IA.
+
+### Próximo passo exato
+
+1.  executar a revisão completa de `main...feature/passagem-tecon`;
+2.  publicar `feature/passagem-tecon`;
+3.  abrir PR para `main` com `Closes #14` na descrição;
+4.  aguardar e conferir o estado de merge;
+5.  após autorização, mesclar o PR e confirmar o fechamento da Issue #14;
+6.  sincronizar a `main` e atualizar este checkpoint.
